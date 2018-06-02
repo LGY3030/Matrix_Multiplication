@@ -4,15 +4,14 @@
 #include <math.h>
 #include <time.h>
 #define SIZE 1024
-#define MAXTHREADS 2
+
 
 int a[SIZE][SIZE],b[SIZE][SIZE];
 long int c[SIZE][SIZE];
 void read();
 int realsize;
-static void print(int start,int end,int tid);
+int MAXTHREADS;
 void *multiply(void *arg);
-pthread_t pt[MAXTHREADS];
 
 int main() {
 	void *exit_status;
@@ -20,11 +19,13 @@ int main() {
 	float diff;
 	int i,j,rp;
 	scanf("%d",&realsize);
+	MAXTHREADS=realsize;
+	pthread_t pt[MAXTHREADS];
 	printf("reading the values\n");
 	read();
 	printf("multiplying the matrics \n");
-	/*start = time(NULL);
-	printf("start time %lf \n",start);*/
+	start = time(NULL);
+	//printf("start time %lf \n",start);*/
 	for(i=0;i<MAXTHREADS;i++){
 		pthread_create(&pt[i],NULL,multiply,(void *)i);			
 	}
@@ -37,8 +38,8 @@ int main() {
 		}
 		printf("\n");
 	}
-	/*end = time(NULL);
-	printf("Final time %lf\n",end-start);*/
+	end = time(NULL);
+	printf("Final time %lf\n",end-start);
 	return 0;
 }
 
@@ -88,7 +89,7 @@ void *multiply(void *arg){
 	part = realsize/MAXTHREADS;
 	start = l*part;
 	end = start + part;
-	printf("THREAD %d CREATED \n",l);
+	//printf("THREAD %d CREATED \n",l);
 	for(i=start;i<end;i++){
 		for(j=0;j<SIZE;j++){
 			for(k=0;k<SIZE;k++){
@@ -99,14 +100,4 @@ void *multiply(void *arg){
 	return NULL;
 }
 
-void print(int start,int end,int tid){
-	int i,j;
-	//printf("THREAD %d PRINTING THE VALUES \n",tid);
-	for(i=start;i<end;i++){
-		for(j=0;j<SIZE;j++){
-			printf("c[%d][%d] : %d ",i,j,c[i][j]);
-		}
-	}
-	printf("\n");
-	//printf("THREAD %d PRINTED THE VALUES \n",tid);
-}
+
