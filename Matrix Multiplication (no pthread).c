@@ -10,24 +10,16 @@ int a[SIZE][SIZE],b[SIZE][SIZE];
 long int c[SIZE][SIZE];
 void read();
 int realsize;
-int MAXTHREADS;
-void *multiply(void *arg);
+void multiply();
 
 int main() {
 	double start,end;
 	int i,j;
 	printf("Size:");
 	scanf("%d",&realsize);
-	MAXTHREADS=realsize;
-	pthread_t pt[MAXTHREADS];
 	read();
 	start = time(NULL);
-	for(i=0;i<MAXTHREADS;i++){
-		pthread_create(&pt[i],NULL,multiply,(void *)i);			
-	}
-	for(i=0;i<MAXTHREADS;i++){
-		pthread_join(pt[i],NULL);
-	}
+	multiply();
 	printf("\nMatrix C:\n");
 	for(i=0;i<realsize;i++){
 		for(j=0;j<realsize;j++){
@@ -83,15 +75,9 @@ void read(){
 	}*/
 }
 
-void *multiply(void *arg){
-	int i,j,k,l;
-	l = (int)arg;
-	int part,start,end;
-	part = realsize/MAXTHREADS;
-	start = l*part;
-	end = start + part;
-	//printf("THREAD %d CREATED \n",l);
-	for(i=start;i<end;i++){
+void multiply(){
+	int i,j,k;	
+	for(i=0;i<realsize;i++){
 		for(j=0;j<realsize;j++){
 			for(k=0;k<realsize;k++){
 				c[i][j] += a[i][k]*b[k][j];
@@ -100,5 +86,3 @@ void *multiply(void *arg){
 	}
 	return NULL;
 }
-
-
