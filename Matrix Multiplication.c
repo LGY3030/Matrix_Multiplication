@@ -14,7 +14,7 @@ int MAXTHREADS;
 void *multiply(void *arg);
 
 int main() {
-	double start,end;
+	long double start,end;
 	int i,j;
 	printf("Size:");
 	scanf("%d",&realsize);
@@ -40,7 +40,7 @@ int main() {
 	}
 	printf("\n");
 	end = time(NULL);
-	printf("Total time %lf\n",end-start);
+	printf("Total time %llf\n",end-start);
 	return 0;
 }
 
