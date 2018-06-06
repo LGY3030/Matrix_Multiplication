@@ -13,45 +13,58 @@ void multiply(int a[][realsize],int b[][realsize],int c[][realsize],int size);
 
 int main(){
 	
-	double start,end;
+	clock_t start,end;
 	int i,j,temp;
-	printf("Size:");
-	scanf("%d",&realsize);
+	double time;
+	int arow,acol,brow,bcol;
+	FILE *infile, *outfile;
+	
+	infile = fopen("input.txt", "r");
+	if(infile == NULL) {
+    	printf("Error in Opening infile");
+    	return EXIT_FAILURE;
+	}
+
+	fscanf(infile, "%d %d", &arow, &acol);	
+	realsize=arow;
 	temp=realsize;
 	int a[realsize][realsize],b[realsize][realsize];
 	int c[realsize][realsize];
-	printf("\nMatrix A:\n");
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			scanf("%d",&a[i][j]);
-		}
-	}
-	printf("\nMatrix B:\n");
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			scanf("%d",&b[i][j]);
-		}
-	}
+	for(i = 0; i < realsize; i++)	
+		for(j = 0; j < realsize; j++)
+			fscanf(infile, "%d", &a[i][j]);
+	
+	
+	fscanf(infile, "%d %d", &brow, &bcol);	
+	for(i = 0; i < realsize; i++)	
+		for(j = 0; j < realsize; j++)
+			fscanf(infile, "%d", &b[i][j]);
+			
+	fclose(infile);
+
 	for(i=0;i<realsize;i++){
 		for(j=0;j<realsize;j++){
 			c[i][j] = 0;
 		}
 	}
-	start = time(NULL);
+	outfile = fopen("output.txt", "w+");
+	start = clock();
 	multiply(a,b,c,realsize);
-	printf("\nMatrix C:\n");
+	end = clock();
+	time=((double)end-start);
+	fprintf(outfile, "Total time %f\n",time);
+	
+	fprintf(outfile, "%d %d \n", temp, temp);
 	for(i=0;i<temp;i++){
 		for(j=0;j<temp;j++){
 			if(j==0)
-			printf("%d",c[i][j]);
+			fprintf(outfile, "%d", c[i][j]);
 			else
-			printf(" %d",c[i][j]);
+			fprintf(outfile, " %d", c[i][j]);
 		}
-		printf("\n");
+		fprintf(outfile, "\n");	
 	}
-	printf("\n");
-	end = time(NULL);
-	printf("Total time %lf\n",end-start);
+	fclose(outfile);
 	return 0;
 
 }
@@ -198,5 +211,3 @@ void multiply(int a[][realsize],int b[][realsize],int c[][realsize],int size){
 		}
 	}
 }
-
-

@@ -7,7 +7,7 @@
 
 
 int a[SIZE][SIZE],b[SIZE][SIZE];
-long int c[SIZE][SIZE];
+int c[SIZE][SIZE];
 void read();
 int realsize;
 int MAXTHREADS;
@@ -16,11 +16,35 @@ void *multiply(void *arg);
 int main() {
 	clock_t start,end;
 	int i,j;
-	printf("Size:");
-	scanf("%d",&realsize);
+	double time;
+	int arow,acol,brow,bcol;
+	FILE *infile, *outfile;
+	infile = fopen("input.txt", "r");
+	
+	if(infile == NULL) {
+    	printf("Error in Opening infile");
+    	return EXIT_FAILURE;
+	}
+
+	fscanf(infile, "%d %d", &arow, &acol);	
+	realsize=arow;
+	for(i = 0; i < realsize; i++)
+		for(j = 0; j < realsize; j++)
+			fscanf(infile, "%d", &a[i][j]);
+	
+	fscanf(infile, "%d %d", &brow, &bcol);
+	for(i = 0; i < realsize; i++)	
+		for(j = 0; j < realsize; j++)
+			fscanf(infile, "%d", &b[i][j]);
+	fclose(infile);
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			c[i][j] = 0;
+		}
+	}
+	outfile = fopen("output.txt", "w+");
 	MAXTHREADS=realsize;
 	pthread_t pt[MAXTHREADS];
-	read();
 	start = clock();
 	for(i=0;i<MAXTHREADS;i++){
 		pthread_create(&pt[i],NULL,multiply,(void *)i);			
@@ -28,59 +52,22 @@ int main() {
 	for(i=0;i<MAXTHREADS;i++){
 		pthread_join(pt[i],NULL);
 	}
-	printf("\nMatrix C:\n");
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			if(j==0)
-			printf("%d",c[i][j]);
-			else
-			printf(" %d",c[i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
 	end = clock();
-	printf("Total time %llf\n",end-start);
-	return 0;
-}
+	time = ((double) (end - start));
+	fprintf(outfile, "Time:%f \n", time);
+	fprintf(outfile, "%d %d \n", realsize, realsize);
+	for(i = 0; i < realsize; i++) {
+		for(j = 0; j < realsize; j++){
+			if(j==0)
+				fprintf(outfile, "%d", c[i][j]);
+			else
+				fprintf(outfile, " %d", c[i][j]);
+		}
+		fprintf(outfile, "\n");		
+	}
+	fclose(outfile);
 
-void read(){
-	int i,j;
-	printf("\nMatrix A:\n");
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			scanf("%d",&a[i][j]);
-		}
-	}
-	printf("\nMatrix B:\n");
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			scanf("%d",&b[i][j]);
-		}
-	}
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			c[i][j] = 0;
-		}
-	}
-	/*for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			printf("%d ",a[i][j]);
-		}
-		printf("\n");
-	}
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			printf("%d ",b[i][j]);
-		}
-		printf("\n");
-	}
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			printf("%d ",c[i][j]);
-		}
-		printf("\n");
-	}*/
+	return 0;
 }
 
 void *multiply(void *arg){
@@ -100,5 +87,4 @@ void *multiply(void *arg){
 	}
 	return NULL;
 }
-
 
