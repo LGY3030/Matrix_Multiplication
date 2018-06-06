@@ -14,14 +14,14 @@ int MAXTHREADS;
 void *multiply(void *arg);
 
 int main() {
-	long double start,end;
+	clock_t start,end;
 	int i,j;
 	printf("Size:");
 	scanf("%d",&realsize);
 	MAXTHREADS=realsize;
 	pthread_t pt[MAXTHREADS];
 	read();
-	start = time(NULL);
+	start = clock();
 	for(i=0;i<MAXTHREADS;i++){
 		pthread_create(&pt[i],NULL,multiply,(void *)i);			
 	}
@@ -39,7 +39,7 @@ int main() {
 		printf("\n");
 	}
 	printf("\n");
-	end = time(NULL);
+	end = clock();
 	printf("Total time %llf\n",end-start);
 	return 0;
 }
