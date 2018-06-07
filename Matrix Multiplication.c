@@ -98,9 +98,9 @@ void *multiply(void *arg){
 	start = l*part;
 	end = start + part;
 	for(i=start;i<end;i++){
-		for(j=0;j<bcol;j++){
-			for(k=0;k<acol;k++){
-				c[i][j] += a[i][k]*b[k][j];
+		for(j=0;j<acol;j++){
+			for(k=0;k<bcol;k++){
+				c[i][k] += a[i][j]*b[j][k];
 			}
 		}
 	}
