@@ -3,14 +3,7 @@
 #include<stdlib.h>
 #include<time.h>
 
-//function to calculate the execution time 
-double calc_time(struct timespec start, struct timespec stop) 
-{
-	double t;
-	t = (stop.tv_sec - start.tv_sec) * 1000; 
-	t += (stop.tv_nsec - start.tv_nsec) * 0.000001; 
-	return t;
-}
+
 
 //function to free allocated memory
 void freeThat(float ** a, float ** b, float ** c, int n)
@@ -27,33 +20,17 @@ void freeThat(float ** a, float ** b, float ** c, int n)
 }
 
 //function to allocate memory to the matrix types
-float ** initMatrix(int n)
+double ** createMatrix(int row,int col)
 {
-	float ** m = (float **) calloc(n, sizeof(float *));
-	for(int i=1; i<=n; ++i)
+	int i;
+	double ** m = (double **) calloc(row, sizeof(double *));
+	for(i=0; i<row; i++)
 	{
-		m[i] = (float *) calloc(n, sizeof(float));
+		m[i] = (double *) calloc(col, sizeof(double));
 	}
 	return m;
 }
 
-//function to initialize the matrices with values from the input
-float ** initMatrixV(int n)
-{
-	float ** m = (float **) calloc(n, sizeof(float *));
-	for(int i=1; i<=n; ++i)
-	{
-		m[i] = (float *) calloc(n, sizeof(float));
-	}
-	for(int i=1; i<=n; ++i)
-	{
-		for(int j=1; j<=n; ++j)
-		{
-			scanf("%f", &m[i][j]);
-		}
-	}
-	return m;
-}
 
 
 //function to add two matrices and return the result
@@ -253,37 +230,52 @@ float ** multiply(float ** a, float ** b, int n)
 	return c; 
 }
 
-void displayMatrix(float ** m, int n)
-{
-	printf("\n-----------------------------------------------------------------\n");
-	for(int i=1; i<=n; ++i)
-	{
-		for(int j=1; j<=n; ++j)
-		{
-			printf("%f ", m[i][j]);
-		}
-		printf("\n");
-	}
-}
 
 int main()
 {
-	struct timespec start, stop;	
-	clock_t start_t, end_t;
-	int n;
-	scanf("%d", &n);
-	float ** M1 = initMatrixV(n);
-	float ** M2 = initMatrixV(n);
-	//displayMatrix(M1, n);
-	//displayMatrix(M2, n);
-	clock_gettime(CLOCK_REALTIME,&start);
-	start_t = clock();
-	float ** M3 = multiply(M1, M2, n);
-	//displayMatrix(M3, n);
-	end_t = clock();
-	clock_gettime(CLOCK_REALTIME,&stop);
-	printf("%lf milliseconds\n",calc_time(start,stop));
-	printf("Clock ticks: %ld\n", end_t - start_t);
+	clock_t start, end;
+	double time;
+	FILE *infile, *outfile;
+	int arow,acol,brow,bcol;
+	infile = fopen("input.txt", "r");
+	if(infile == NULL) {
+    	printf("Error in Opening infile");
+    	return EXIT_FAILURE;
+	}
+
+	fscanf(infile, "%d %d", &arow, &acol);
+	if(arow>=acol){
+		
+	}
+	double ** a = createMatrix(arow,acol);
+	for(i=0;i<arow;i++){
+		for(j=0;j<acol;j++){
+			fscanf(infile, "%lf", &a[i][j]);	
+		}
+			
+	}
+	
+	fscanf(infile, "%d %d", &brow, &bcol);
+	double ** b = createMatrix(brow,bcol);
+	for(i=0;i<brow;i++){
+		for(j=0;j<bcol;j++){
+			fscanf(infile, "%lf", &b[i][j]);	
+		}
+			
+	}
+	
+	fclose(infile);
+	
+	double ** c = createMatrix(arow,bcol);
+
+	start = clock();
+	
+	multiply(a,b,c,);
+
+	end = clock();
+	time=((double)end-start);
+	
+	printf("Time: %lf ms\n", time);
 	for(int i=1; i<=n; ++i)
 	{
 		free(M1[i]);
