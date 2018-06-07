@@ -3,21 +3,17 @@
 #include <pthread.h>
 #include <math.h>
 #include <time.h>
-#define SIZE 1024
-
-
-int a[SIZE][SIZE],b[SIZE][SIZE];
-int c[SIZE][SIZE];
-void read();
-int realsize;
-int MAXTHREADS;
+#define MAXTHREADS 4
+int arow,acol,brow,bcol;
+double ** a;
+double ** b;
+double ** c;
 void *multiply(void *arg);
 
 int main() {
 	clock_t start,end;
 	int i,j;
 	double time;
-	int arow,acol,brow,bcol;
 	FILE *infile, *outfile;
 	infile = fopen("input.txt", "r");
 	
@@ -27,23 +23,47 @@ int main() {
 	}
 
 	fscanf(infile, "%d %d", &arow, &acol);	
-	realsize=arow;
-	for(i = 0; i < realsize; i++)
-		for(j = 0; j < realsize; j++)
-			fscanf(infile, "%d", &a[i][j]);
+	
+	a=(double **) calloc(arow, sizeof(double *));
+	for(i=0; i<arow; i++){
+		a[i]=(double *) calloc(acol, sizeof(double));
+	}
+	
+	for(i=0;i<arow;i++){
+		for(j=0;j<acol;j++){
+			fscanf(infile, "%lf", &a[i][j]);	
+		}
+			
+	}
 	
 	fscanf(infile, "%d %d", &brow, &bcol);
-	for(i = 0; i < realsize; i++)	
-		for(j = 0; j < realsize; j++)
-			fscanf(infile, "%d", &b[i][j]);
+	
+	b=(double **)calloc(brow, sizeof(double *));
+	
+	for(i=0; i<brow; i++){
+		b[i]=(double *)calloc(bcol, sizeof(double));
+	}
+	
+	for(i=0;i<brow;i++){
+		for(j=0;j<bcol;j++){
+			fscanf(infile, "%lf", &b[i][j]);
+		}
+				
+	}
+		
 	fclose(infile);
-	for(i=0;i<realsize;i++){
-		for(j=0;j<realsize;j++){
-			c[i][j] = 0;
+	
+	c=(double **)calloc(arow, sizeof(double *));
+	for(i=0; i<arow; i++){
+		c[i]=(double *)calloc(bcol, sizeof(double));
+	}
+	for(i=0;i<arow;i++){
+		for(j=0;j<bcol;j++){
+			c[i][j] = 0.0;
 		}
 	}
+	
 	outfile = fopen("output.txt", "w+");
-	MAXTHREADS=realsize;
 	pthread_t pt[MAXTHREADS];
 	start = clock();
 	for(i=0;i<MAXTHREADS;i++){
@@ -54,14 +74,14 @@ int main() {
 	}
 	end = clock();
 	time = ((double) (end - start));
-	fprintf(outfile, "Time:%f \n", time);
-	fprintf(outfile, "%d %d \n", realsize, realsize);
-	for(i = 0; i < realsize; i++) {
-		for(j = 0; j < realsize; j++){
+	fprintf(outfile, "Time:%f ms\n", time);
+	fprintf(outfile, "%d %d \n", arow, bcol);
+	for(i = 0; i < arow; i++) {
+		for(j = 0; j < bcol; j++){
 			if(j==0)
-				fprintf(outfile, "%d", c[i][j]);
+				fprintf(outfile, "%lf", c[i][j]);
 			else
-				fprintf(outfile, " %d", c[i][j]);
+				fprintf(outfile, " %lf", c[i][j]);
 		}
 		fprintf(outfile, "\n");		
 	}
@@ -74,13 +94,12 @@ void *multiply(void *arg){
 	int i,j,k,l;
 	l = (int)arg;
 	int part,start,end;
-	part = realsize/MAXTHREADS;
+	part = arow/MAXTHREADS;
 	start = l*part;
 	end = start + part;
-	//printf("THREAD %d CREATED \n",l);
 	for(i=start;i<end;i++){
-		for(j=0;j<realsize;j++){
-			for(k=0;k<realsize;k++){
+		for(j=0;j<bcol;j++){
+			for(k=0;k<acol;k++){
 				c[i][j] += a[i][k]*b[k][j];
 			}
 		}
