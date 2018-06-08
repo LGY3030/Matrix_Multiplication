@@ -3,107 +3,86 @@
 #include <pthread.h>
 #include <math.h>
 #include <time.h>
-#define MAXTHREADS 4
-int arow,acol,brow,bcol;
-double ** a;
-double ** b;
-double ** c;
-void *multiply(void *arg);
+#define SIZE 1024
+
+
+int a[SIZE][SIZE],b[SIZE][SIZE];
+long int c[SIZE][SIZE];
+void read();
+int realsize;
+void multiply();
 
 int main() {
-	clock_t start,end;
+	double start,end;
 	int i,j;
-	double time;
-	FILE *infile, *outfile;
-	infile = fopen("input.txt", "r");
-	
-	if(infile == NULL) {
-    	printf("Error in Opening infile");
-    	return EXIT_FAILURE;
-	}
-
-	fscanf(infile, "%d %d", &arow, &acol);	
-	
-	a=(double **) calloc(arow, sizeof(double *));
-	for(i=0; i<arow; i++){
-		a[i]=(double *) calloc(acol, sizeof(double));
-	}
-	
-	for(i=0;i<arow;i++){
-		for(j=0;j<acol;j++){
-			fscanf(infile, "%lf", &a[i][j]);	
-		}
-			
-	}
-	
-	fscanf(infile, "%d %d", &brow, &bcol);
-	
-	b=(double **)calloc(brow, sizeof(double *));
-	
-	for(i=0; i<brow; i++){
-		b[i]=(double *)calloc(bcol, sizeof(double));
-	}
-	
-	for(i=0;i<brow;i++){
-		for(j=0;j<bcol;j++){
-			fscanf(infile, "%lf", &b[i][j]);
-		}
-				
-	}
-		
-	fclose(infile);
-	
-	c=(double **)calloc(arow, sizeof(double *));
-	for(i=0; i<arow; i++){
-		c[i]=(double *)calloc(bcol, sizeof(double));
-	}
-	for(i=0;i<arow;i++){
-		for(j=0;j<bcol;j++){
-			c[i][j] = 0.0;
-		}
-	}
-	
-	outfile = fopen("output.txt", "w+");
-	pthread_t pt[MAXTHREADS];
-	start = clock();
-	for(i=0;i<MAXTHREADS;i++){
-		pthread_create(&pt[i],NULL,multiply,(void *)i);			
-	}
-	for(i=0;i<MAXTHREADS;i++){
-		pthread_join(pt[i],NULL);
-	}
-	end = clock();
-	time = ((double) (end - start));
-	fprintf(outfile, "Time:%f ms\n", time);
-	fprintf(outfile, "%d %d \n", arow, bcol);
-	for(i = 0; i < arow; i++) {
-		for(j = 0; j < bcol; j++){
+	printf("Size:");
+	scanf("%d",&realsize);
+	read();
+	start = time(NULL);
+	multiply();
+	printf("\nMatrix C:\n");
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
 			if(j==0)
-				fprintf(outfile, "%lf", c[i][j]);
+			printf("%d",c[i][j]);
 			else
-				fprintf(outfile, " %lf", c[i][j]);
+			printf(" %d",c[i][j]);
 		}
-		fprintf(outfile, "\n");		
+		printf("\n");
 	}
-	fclose(outfile);
-
+	printf("\n");
+	end = time(NULL);
+	printf("Total time %lf\n",end-start);
 	return 0;
 }
 
-void *multiply(void *arg){
-	int i,j,k,l;
-	l = (int)arg;
-	int part,start,end;
-	part = arow/MAXTHREADS;
-	start = l*part;
-	end = start + part;
-	for(i=start;i<end;i++){
-		for(j=0;j<acol;j++){
-			for(k=0;k<bcol;k++){
-				c[i][k] += a[i][j]*b[j][k];
+void read(){
+	int i,j;
+	printf("\nMatrix A:\n");
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			scanf("%d",&a[i][j]);
+		}
+	}
+	printf("\nMatrix B:\n");
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			scanf("%d",&b[i][j]);
+		}
+	}
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			c[i][j] = 0;
+		}
+	}
+	/*for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			printf("%d ",a[i][j]);
+		}
+		printf("\n");
+	}
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			printf("%d ",b[i][j]);
+		}
+		printf("\n");
+	}
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			printf("%d ",c[i][j]);
+		}
+		printf("\n");
+	}*/
+}
+
+void multiply(){
+	int i,j,k;	
+	for(i=0;i<realsize;i++){
+		for(j=0;j<realsize;j++){
+			for(k=0;k<realsize;k++){
+				c[i][j] += a[i][k]*b[k][j];
 			}
 		}
 	}
 	return NULL;
 }
-
