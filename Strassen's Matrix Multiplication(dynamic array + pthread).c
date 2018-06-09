@@ -32,8 +32,8 @@ typedef struct{
 
 //Structure to hold a single matrix and its dimension
 typedef struct{
-	float ** m;
-	int row,col;
+	double ** m;
+	int row,col,size;
 } onematrix;
 
 
@@ -68,69 +68,49 @@ double ** creatematrix(int row,int col){
 	return m;
 }
 
-//function to initialize the matrices with values from the input
-float ** initMatrixV(int n)
-{
-	float ** m = (float **) calloc(n, sizeof(float *));
-	for(int i=1; i<=n; ++i)
-	{
-		m[i] = (float *) calloc(n, sizeof(float));
-	}
-	for(int i=1; i<=n; ++i)
-	{
-		for(int j=1; j<=n; ++j)
-		{
-			scanf("%f", &m[i][j]);
-		}
-	}
-	return m;
-}
-
-
 
 //function to allocate memory to the two-matrix structure defined above
-mat * initStruct2(int N)
-{
-	mat * m = (mat *) malloc(sizeof(mat));
-	m->M1 = initMatrix(N);
-	m->M2 = initMatrix(N);
-	m->n = N;
+abmatrix * initstruct2(int resize){
+	abmatrix * m = (abmatrix *) malloc(sizeof(abmatrix));
+	m->a = creatematrix(resize,resize);
+	m->b = creatematrix(resize,resize);
+	m->size = resize;
 	return m;
 }
 
 //function to allocate memory to the one-matrix structure defined above
-matS * initStruct(int N)
-{
-	matS * M = (matS *) malloc(sizeof(matS));
-	M->m = initMatrix(N);
-	M->n = N;
+onematrix * initstruct(int resize){
+	onematrix * M = (onematrix *) malloc(sizeof(onematrix));
+	M->m = creatematrix(resize,resize);
+	M->size = resize;
 	return M;
 }
 
 //function to free allocated memory from matrix type
-void freeMat(float ** m, int N)
-{
-	for(int i=1; i<N; ++i)
-	{
+void freematrix(double ** m, int size){
+	int i;
+	for(i=0;i<size;i++)	{
 		free(m[i]);
 	}
 	free(m);
 }
 
 //function to free allocated memory from mat type structures
-void freeStruct2(mat * M)
-{
-	freeMat(M->M1, M->n);
-	freeMat(M->M2, M->n);
+void freestruct2(abmatrix * M){
+	freematrix(M->a, M->size);
+	freematrix(M->b, M->size);
 	free(M);
 }
 
 //function to free allocated memory from matS type structures
-void freeStruct(matS * M)
-{
-	freeMat(M->m, M->n);
+void freestruct(onematrix * M){
+	freematrix(M->m, M->size);
 	free(M);
 }
+
+
+
+
 
 double ** addmatrix(double ** a, double ** b, int size){
 	int i,j;
@@ -155,189 +135,172 @@ double ** submatrix(double ** a, double ** b, int size){
 }
 
 //Thread Routine that is called recursively
-void * remul(void * M)
+void * remul(void * inputstruct)
 {
-	mat * MM = (mat *) M;
-	int ord = MM->n;
-	int N = ord/2;
+	int i,j;
+	abmatrix * M = (abmatrix *) inputstruct;
+	int size = M->size;
+	int resize = size/2;
 	
-	matS * c = initStruct(ord); //allocating memory to the resultant matrix
+	onematrix * c = initstruct(size); //allocating memory to the resultant matrix
 	
-	if(ord==1)
-	{
-		c->m[1][1] = MM->M1[1][1] * MM->M2[1][1] ;
+	if(size==1){
+		c->m[0][0] = M->a[0][0] * M->b[0][0] ;
 	}
-	else
-	{	
-		float ** temp;
-		//allocating memory to the submatrices
-		float ** A11 = initMatrix(N);
-		float ** A12 = initMatrix(N);
-		float ** A21 = initMatrix(N);
-		float ** A22 = initMatrix(N);
-		float ** B11 = initMatrix(N);
-		float ** B12 = initMatrix(N);
-		float ** B21 = initMatrix(N);
-		float ** B22 = initMatrix(N);
+	else{	
+		double ** a11 = creatematrix(resize,resize);
+		double ** a12 = creatematrix(resize,resize);
+		double ** a21 = creatematrix(resize,resize);
+		double ** a22 = creatematrix(resize,resize);
+		double ** b11 = creatematrix(resize,resize);
+		double ** b12 = creatematrix(resize,resize);
+		double ** b21 = creatematrix(resize,resize);
+		double ** b22 = creatematrix(resize,resize);
+		double ** ctemp;
 		//initialising the submatrices
-		for(int i=1; i<=(N); ++i)
-		{
-			for(int j=1; j<=(N); ++j)
-			{
-				A11[i][j] = MM->M1[i][j];
-				B11[i][j] = MM->M2[i][j];
+		for(i=0;i<resize;i++){
+			for(j=0;j<resize;j++){
+				a11[i][j] = M->a[i][j];
+				b11[i][j] = M->b[i][j];
 			}
 		}
-		int k=1;
-		for(int i=(N)+1; i<=ord; ++i)
-		{
-			for(int j=1; j<=(N); ++j)
-			{
-				A21[k][j] = MM->M1[i][j];
-				B21[k][j] = MM->M2[i][j];
+		int k=0;
+		for(i=resize;i<size;i++){
+			for(j=0;j<resize;j++){
+				a21[k][j] = M->a[i][j];
+				b21[k][j] = M->b[i][j];
 			}
 			k++;
 		}
-		int l = 1;
-		for(int i=1; i<=(N); ++i)
-		{
-			for(int j=(N)+1; j<=ord; ++j)
-			{
-				A12[i][l] = MM->M1[i][j];
-				B12[i][l] = MM->M2[i][j];
+		int l=0;
+		for(i=0;i<resize;i++){
+			for(j=resize;j<size;j++){
+				a12[i][l] = M->a[i][j];
+				b12[i][l] = M->b[i][j];
 				l++;
 			}
-			l = 1;
+			l=0;
 		}
-		k = 1;
-		l = 1;
-		for(int i=(N)+1; i<=ord; ++i)
-		{
-			for(int j=(N)+1; j<=ord; ++j)
-			{
-				A22[k][l] = MM->M1[i][j];
-				B22[k][l] = MM->M2[i][j];
+		k=0;
+		l=0;
+		for(i=resize;i<size;i++){
+			for(j=resize;j<size;j++){
+				a22[k][l] = M->a[i][j];
+				b22[k][l] = M->b[i][j];
 				l++;
 			}
-			l = 1;
+			l=0;
 			k++;
 		}
 		//Creating the structures which will be used to store the matrix pairs following the algorithm
-		mat * m1 = initStruct2(N);//A11, S1
-		m1->M1 = A11;
-		m1->M2 = subMatrix(B12, B22, N);
-		mat * m2 = initStruct2(N);//S2, B22
-		m2->M1 = addMatrix(A11, A12, N);
-		m2->M2 = B22;
-		mat * m3 = initStruct2(N);//S3, B11
-		m3->M1 = addMatrix(A21, A22, N);
-		m3->M2 = B11;
-		mat * m4 = initStruct2(N);//A22, S4	
-		m4->M1 = A22;
-		m4->M2 = subMatrix(B21, B11, N);
-		mat * m5 = initStruct2(N);//S5, S6	
-		m5->M1 = addMatrix(A11, A22, N);
-		m5->M2 = addMatrix(B11, B22, N);
-		mat * m6 = initStruct2(N);//S7, S8
-		m6->M1 = subMatrix(A12, A22, N);
-		m6->M2 = addMatrix(B21, B22, N);
-		mat * m7 = initStruct2(N);//S9, S10	
-		m7->M1 = subMatrix(A11, A21, N);
-		m7->M2 = addMatrix(B11, B12, N);
+		abmatrix * m1 = initstruct2(resize);//A11, S1
+		m1->a = a11;
+		m1->b = submatrix(b12, b22, resize);
+		abmatrix * m2 = initstruct2(resize);//S2, B22
+		m2->a = addmatrix(a11, a12, resize);
+		m2->b = b22;
+		abmatrix * m3 = initstruct2(resize);//S3, B11
+		m3->a = addmatrix(a21, a22, resize);
+		m3->b = b11;
+		abmatrix * m4 = initstruct2(resize);//A22, S4	
+		m4->a = a22;
+		m4->b = submatrix(b21, b11, resize);
+		abmatrix * m5 = initstruct2(resize);//S5, S6	
+		m5->a = addmatrix(a11, a22, resize);
+		m5->b = addmatrix(b11, b22, resize);
+		abmatrix * m6 = initstruct2(resize);//S7, S8
+		m6->a = submatrix(a12, a22, resize);
+		m6->b = addmatrix(b21, b22, resize);
+		abmatrix * m7 = initstruct2(resize);//S9, S10	
+		m7->a = submatrix(a11, a21, resize);
+		m7->b = addmatrix(b11, b12, resize);
 		
 		//Recursive calls 
-		matS * p1 = remul((void *) m1);
-		matS * p2 = remul((void *) m2);
-		matS * p3 = remul((void *) m3);
-		matS * p4 = remul((void *) m4);
-		matS * p5 = remul((void *) m5);
-		matS * p6 = remul((void *) m6);
-		matS * p7 = remul((void *) m7);
+		onematrix * p1 = remul((void *) m1);
+		onematrix * p2 = remul((void *) m2);
+		onematrix * p3 = remul((void *) m3);
+		onematrix * p4 = remul((void *) m4);
+		onematrix * p5 = remul((void *) m5);
+		onematrix * p6 = remul((void *) m6);
+		onematrix * p7 = remul((void *) m7);
 		
-		freeStruct2(m1);
-		freeStruct2(m2);
-		freeStruct2(m3);
-		freeStruct2(m4);
-		freeStruct2(m5);
-		freeStruct2(m6);
-		freeStruct2(m7);
+		freestruct2(m1);
+		freestruct2(m2);
+		freestruct2(m3);
+		freestruct2(m4);
+		freestruct2(m5);
+		freestruct2(m6);
+		freestruct2(m7);
 		
 		//After getting the resultant matrices from the recursive calls, 
 		//pair matrices for further operations specified by the algorithm
-		float ** t1;
-		t1 = addMatrix(p5->m, p4->m, N);
-		float ** t2;
-		t2 = addMatrix(t1, p6->m, N);
-		temp = subMatrix(t2, p2->m, N);
-		for(int i=1; i<=(N); ++i)
-		{
-			for(int j=1; j<=(N); ++j)
-			{
-				c->m[i][j] = temp[i][j];
+		double ** t1;
+		t1 = addmatrix(p5->m, p4->m, resize);
+		double ** t2;
+		t2 = addmatrix(t1, p6->m, resize);
+		ctemp = submatrix(t2, p2->m, resize);
+		for(i=0;i<resize;i++){
+			for(j=0;j<resize;j++){
+				c->m[i][j] = ctemp[i][j];
 			}
 		}	
-		freeMat(t1, N);
-		freeMat(t2, N);
-		freeMat(temp, N);	
-		temp = addMatrix(p1->m, p2->m, N);
-		l = 1;
-		for(int i=1; i<=(N); ++i)
-		{
-			for(int j=(N)+1; j<=ord; ++j)
-			{
-				c->m[i][j] = temp[i][l];
+		freematrix(t1, resize);
+		freematrix(t2, resize);
+		freematrix(ctemp, resize);	
+		ctemp = addmatrix(p1->m, p2->m, resize);
+		l = 0;
+		for(i=0;i<resize;i++){
+			for(j=resize;j<size;j++){
+				c->m[i][j] = ctemp[i][l];
 				l++;
 			}
-			l = 1;
+			l = 0;
 		}
-		freeMat(temp, N);
+		freematrix(ctemp, resize);
 	
 	
-		temp = addMatrix(p3->m, p4->m, N);
-		k = 1;
-		for(int i=(N)+1; i<=ord; ++i)
-		{
-			for(int j=1; j<=(N); ++j)
-			{
-				c->m[i][j] = temp[k][j];		
+		ctemp = addmatrix(p3->m, p4->m, resize);
+		k = 0;
+		for(i=resize;i<size;i++){
+			for(j=0;j<resize;j++){
+				c->m[i][j] = ctemp[k][j];		
 			}
 			k++;
 		}
-		freeMat(temp, N);	
+		freematrix(ctemp, resize);	
 		
-		t1 = addMatrix(p5->m, p1->m, N);
-		t2 = subMatrix(t1, p3->m, N);
-		temp = subMatrix(t2, p7->m, N);
-		k = 1;
-		l = 1;
-		for(int i=(N)+1; i<=ord; ++i)
-		{
-			for(int j=(N)+1; j<=ord; ++j)
-			{
-				c->m[i][j] = temp[k][l];
+		t1 = addmatrix(p5->m, p1->m, resize);
+		t2 = submatrix(t1, p3->m, resize);
+		ctemp = submatrix(t2, p7->m, resize);
+		k = 0;
+		l = 0;
+		for(i=resize;i<size;i++){
+			for(j=resize;j<size;j++){
+				c->m[i][j] = ctemp[k][l];
 				l++;
 			}
-			l = 1;
+			l = 0;
 			k++;
 		}
-		freeMat(t1, N);
-		freeMat(t2, N);
-		freeMat(temp, N);
-		freeStruct(p1);
-		freeStruct(p2);
-		freeStruct(p3);
-		freeStruct(p4);
-		freeStruct(p5);
-		freeStruct(p6);
-		freeStruct(p7);		
+		freematrix(t1, resize);
+		freematrix(t2, resize);
+		freematrix(ctemp, resize);
+		freestruct(p1);
+		freestruct(p2);
+		freestruct(p3);
+		freestruct(p4);
+		freestruct(p5);
+		freestruct(p6);
+		freestruct(p7);		
 	}
 	return (void *) c;
 }
 		
 //Wrapper function for the routine function,
 //Here is where the threads are created and initialised		
-matS * multiply(abmatrix * ABmatrix)
+onematrix * multiply(abmatrix * ABmatrix)
 {
+	int i,j;
 	int size=ABmatrix->size;
 	int resize=size/2;
 	pthread_t pt[7];
@@ -350,204 +313,188 @@ matS * multiply(abmatrix * ABmatrix)
 	void * stat6;
 	void * stat7;
 	
-	matS * p1;
-	matS * p2;
-	matS * p3;
-	matS * p4;
-	matS * p5;
-	matS * p6;
-	matS * p7;
+	onematrix * p1;
+	onematrix * p2;
+	onematrix * p3;
+	onematrix * p4;
+	onematrix * p5;
+	onematrix * p6;
+	onematrix * p7;
+	onematrix * c = initstruct(size);
 	
-	float ** temp;
-	matS * c = initStruct(n);
+	double ** a11 = creatematrix(resize,resize);
+	double ** a12 = creatematrix(resize,resize);
+	double ** a21 = creatematrix(resize,resize);
+	double ** a22 = creatematrix(resize,resize);
+	double ** b11 = creatematrix(resize,resize);
+	double ** b12 = creatematrix(resize,resize);
+	double ** b21 = creatematrix(resize,resize);
+	double ** b22 = creatematrix(resize,resize);
+	double ** ctemp;
 	
-	float ** A11 = initMatrix(N);
-	float ** A12 = initMatrix(N);
-	float ** A21 = initMatrix(N);
-	float ** A22 = initMatrix(N);
-	float ** B11 = initMatrix(N);
-	float ** B12 = initMatrix(N);
-	float ** B21 = initMatrix(N);
-	float ** B22 = initMatrix(N);
-	for(int i=1; i<=(N); ++i)
-	{
-		for(int j=1; j<=(N); ++j)
-		{
-			A11[i][j] = M->M1[i][j];
-			B11[i][j] = M->M2[i][j];
+		for(i=0;i<resize;i++){
+			for(j=0;j<resize;j++){
+				a11[i][j] = ABmatrix->a[i][j];
+				b11[i][j] = ABmatrix->b[i][j];
+			}
 		}
-	}
-	int k=1;
-	for(int i=(N)+1; i<=n; ++i)
-	{
-		for(int j=1; j<=(N); ++j)
-		{
-			A21[k][j] = M->M1[i][j];
-			B21[k][j] = M->M2[i][j];
+		int k=0;
+		for(i=resize;i<size;i++){
+			for(j=0;j<resize;j++){
+				a21[k][j] = ABmatrix->a[i][j];
+				b21[k][j] = ABmatrix->b[i][j];
+			}
+			k++;
 		}
-		k++;
-	}
-	int l = 1;
-	for(int i=1; i<=(N); ++i)
-	{
-		for(int j=(N)+1; j<=n; ++j)
-		{
-			A12[i][l] = M->M1[i][j];
-			B12[i][l] = M->M2[i][j];
-			l++;
+		int l=0;
+		for(i=0;i<resize;i++){
+			for(j=resize;j<size;j++){
+				a12[i][l] = ABmatrix->a[i][j];
+				b12[i][l] = ABmatrix->b[i][j];
+				l++;
+			}
+			l=0;
 		}
-		l = 1;
-	}
-	k = 1;
-	l = 1;
-	for(int i=(N)+1; i<=n; ++i)
-	{
-		for(int j=(N)+1; j<=n; ++j)
-		{
-			A22[k][l] = M->M1[i][j];
-			B22[k][l] = M->M2[i][j];
-			l++;
+		k=0;
+		l=0;
+		for(i=resize;i<size;i++){
+			for(j=resize;j<size;j++){
+				a22[k][l] = ABmatrix->a[i][j];
+				b22[k][l] = ABmatrix->b[i][j];
+				l++;
+			}
+			l=0;
+			k++;
 		}
-		l = 1;
-		k++;
-	}
 	
 	//Splitting the input matrices into their submatrices and pairing them accordingly
-	mat * m1 = initStruct2(N);//A11, S1
-	m1->M1 = A11;
-	m1->M2 = subMatrix(B12, B22, N);
+	abmatrix * m1 = initstruct2(resize);//A11, S1
+	m1->a = a11;
+	m1->b = submatrix(b12, b22, resize);
 	
-	mat * m2 = initStruct2(N);//S2, B22
-	m2->M1 = addMatrix(A11, A12, N);
-	m2->M2 = B22;
+	abmatrix * m2 = initstruct2(resize);//S2, B22
+	m2->a = addmatrix(a11, a12, resize);
+	m2->b = b22;
 	
-	mat * m3 = initStruct2(N);//S3, B11
-	m3->M1 = addMatrix(A21, A22, N);
-	m3->M2 = B11;
+	abmatrix * m3 = initstruct2(resize);//S3, B11
+	m3->a = addmatrix(a21, a22, resize);
+	m3->b = b11;
 	
-	mat * m4 = initStruct2(N);//A22, S4	
-	m4->M1 = A22;
-	m4->M2 = subMatrix(B21, B11, N);
+	abmatrix * m4 = initstruct2(resize);//A22, S4	
+	m4->a = a22;
+	m4->b = submatrix(b21, b11, resize);
 	
-	mat * m5 = initStruct2(N);//S5, S6	
-	m5->M1 = addMatrix(A11, A22, N);
-	m5->M2 = addMatrix(B11, B22, N);
+	abmatrix * m5 = initstruct2(resize);//S5, S6	
+	m5->a = addmatrix(a11, a22, resize);
+	m5->b = addmatrix(b11, b22, resize);
 	
-	mat * m6 = initStruct2(N);//S7, S8
-	m6->M1 = subMatrix(A12, A22, N);
-	m6->M2 = addMatrix(B21, B22, N);
+	abmatrix * m6 = initstruct2(resize);//S7, S8
+	m6->a = submatrix(a12, a22, resize);
+	m6->b = addmatrix(b21, b22, resize);
 	
-	mat * m7 = initStruct2(N);//S9, S10	
-	m7->M1 = subMatrix(A11, A21, N);
-	m7->M2 = addMatrix(B11, B12, N);
+	abmatrix * m7 = initstruct2(resize);//S9, S10	
+	m7->a = submatrix(a11, a21, resize);
+	m7->b = addmatrix(b11, b12, resize);
 	
 	//Creating the threads and passing the matrix pairs to the thread routine
-	pthread_create(&tid[0], NULL, remul, (void*) m1);
-	pthread_create(&tid[1], NULL, remul, (void*) m2);
-	pthread_create(&tid[2], NULL, remul, (void*) m3);
-	pthread_create(&tid[3], NULL, remul, (void*) m4);
-	pthread_create(&tid[4], NULL, remul, (void*) m5);
-	pthread_create(&tid[5], NULL, remul, (void*) m6);
-	pthread_create(&tid[6], NULL, remul, (void*) m7);
+	pthread_create(&pt[0], NULL, remul, (void*) m1);
+	pthread_create(&pt[1], NULL, remul, (void*) m2);
+	pthread_create(&pt[2], NULL, remul, (void*) m3);
+	pthread_create(&pt[3], NULL, remul, (void*) m4);
+	pthread_create(&pt[4], NULL, remul, (void*) m5);
+	pthread_create(&pt[5], NULL, remul, (void*) m6);
+	pthread_create(&pt[6], NULL, remul, (void*) m7);
 	
 	//Collecting the threads and storing the return values in the second parameter passed
-	pthread_join(tid[0], &stat1);
+	pthread_join(pt[0], &stat1);
 	
-	p1 = (matS *) stat1; //A11, B11
-	pthread_join(tid[1], &stat2);
+	p1 = (onematrix *) stat1; //A11, B11
+	pthread_join(pt[1], &stat2);
 	
-	p2 = (matS *) stat2;//A12, B21
-	pthread_join(tid[2], &stat3);
+	p2 = (onematrix *) stat2;//A12, B21
+	pthread_join(pt[2], &stat3);
 	
-	p3 = (matS *) stat3;//A11, B12
-	pthread_join(tid[3], &stat4);
+	p3 = (onematrix *) stat3;//A11, B12
+	pthread_join(pt[3], &stat4);
 	
-	p4 = (matS *) stat4;//A12, B22
-	pthread_join(tid[4], &stat5);
+	p4 = (onematrix *) stat4;//A12, B22
+	pthread_join(pt[4], &stat5);
 	
-	p5 = (matS *) stat5;//A21, B11
-	pthread_join(tid[5], &stat6);
+	p5 = (onematrix *) stat5;//A21, B11
+	pthread_join(pt[5], &stat6);
 	
-	p6 = (matS *) stat6;//A22, B21
-	pthread_join(tid[6], &stat7);
+	p6 = (onematrix *) stat6;//A22, B21
+	pthread_join(pt[6], &stat7);
 	
-	p7 = (matS *) stat7;//A21, B12
+	p7 = (onematrix *) stat7;//A21, B12
 	
-	freeStruct2(m1);
-	freeStruct2(m2);
-	freeStruct2(m3);
-	freeStruct2(m4);
-	freeStruct2(m5);
-	freeStruct2(m6);
-	freeStruct2(m7);
+	freestruct2(m1);
+	freestruct2(m2);
+	freestruct2(m3);
+	freestruct2(m4);
+	freestruct2(m5);
+	freestruct2(m6);
+	freestruct2(m7);
 	
 	//Resultant matrices are paired accordingly for further operations as specified by the algorithm
-	float ** t1;
-	t1 = addMatrix(p5->m, p4->m, N);
-	float ** t2;
-	t2 = addMatrix(t1, p6->m, N);
-	temp = subMatrix(t2, p2->m, N);
-	for(int i=1; i<=(N); ++i)
-	{
-		for(int j=1; j<=(N); ++j)
-		{
-			c->m[i][j] = temp[i][j];
+	double ** t1;
+	t1 = addmatrix(p5->m, p4->m, resize);
+	double ** t2;
+	t2 = addmatrix(t1, p6->m, resize);
+	ctemp = submatrix(t2, p2->m, resize);
+	for(i=0;i<resize;i++){
+			for(j=0;j<resize;j++){
+				c->m[i][j] = ctemp[i][j];
 		}
 	}	
-	freeMat(t1, N);
-	freeMat(t2, N);
-	freeMat(temp, N);	
-	temp = addMatrix(p1->m, p2->m, N);
-	l = 1;
-	for(int i=1; i<=(N); ++i)
-	{
-		for(int j=(N)+1; j<=n; ++j)
-		{
-			c->m[i][j] = temp[i][l];
+	freematrix(t1, resize);
+	freematrix(t2, resize);
+	freematrix(ctemp, resize);	
+	ctemp = addmatrix(p1->m, p2->m, resize);
+	l = 0;
+	for(i=0;i<resize;i++){
+			for(j=resize;j<size;j++){
+				c->m[i][j] = ctemp[i][l];
 			l++;
 		}
-		l = 1;
+		l = 0;
 	}
-	freeMat(temp, N);
+	freematrix(ctemp, resize);
 	
 	
-	temp = addMatrix(p3->m, p4->m, N);
-	k = 1;
-	for(int i=(N)+1; i<=n; ++i)
-	{
-		for(int j=1; j<=(N); ++j)
-		{
-			c->m[i][j] = temp[k][j];		
+	ctemp = addmatrix(p3->m, p4->m, resize);
+	k = 0;
+	for(i=resize;i<size;i++){
+			for(j=0;j<resize;j++){
+				c->m[i][j] = ctemp[k][j];		
 		}
 		k++;
 	}
-	freeMat(temp, N);	
+	freematrix(ctemp, resize);	
 		
-	t1 = addMatrix(p5->m, p1->m, N);
-	t2 = subMatrix(t1, p3->m, N);
-	temp = subMatrix(t2, p7->m, N);
-	k = 1;
-	l = 1;
-	for(int i=(N)+1; i<=n; ++i)
-	{
-		for(int j=(N)+1; j<=n; ++j)
-		{
-			c->m[i][j] = temp[k][l];
+	t1 = addmatrix(p5->m, p1->m, resize);
+	t2 = submatrix(t1, p3->m, resize);
+	ctemp = submatrix(t2, p7->m, resize);
+	k = 0;
+	l = 0;
+	for(i=resize;i<size;i++){
+			for(j=resize;j<size;j++){
+			c->m[i][j] = ctemp[k][l];
 			l++;
 		}
-		l = 1;
+		l = 0;
 		k++;
 	}
-	freeMat(t1, N);
-	freeMat(t2, N);
-	freeMat(temp, N);
-	freeStruct(p1);
-	freeStruct(p2);
-	freeStruct(p3);
-	freeStruct(p4);
-	freeStruct(p5);
-	freeStruct(p6);
-	freeStruct(p7);	
+	freematrix(t1, resize);
+	freematrix(t2, resize);
+	freematrix(ctemp, resize);
+	freestruct(p1);
+	freestruct(p2);
+	freestruct(p3);
+	freestruct(p4);
+	freestruct(p5);
+	freestruct(p6);
+	freestruct(p7);	
 	return c;
 }
 
@@ -559,7 +506,7 @@ int main(){
 	FILE *infile, *outfile;
 	int arow,acol,brow,bcol;
 	int size;
-	abmatrix * ABmatrix = (abmatrix *) malloc(sizeof(mat));
+	abmatrix * ABmatrix = (abmatrix *) malloc(sizeof(abmatrix));
 	
 	infile = fopen("input.txt", "r");
 	if(infile == NULL) {
@@ -615,7 +562,7 @@ int main(){
 		fprintf(outfile, "\n");		
 	}
 	fclose(outfile);
-	freeStruct2(Matrix);
-	freeStruct(res);
+	freestruct2(ABmatrix);
+	freestruct(Cmatrix);
 	return 0;
 }
