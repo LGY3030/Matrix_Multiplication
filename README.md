@@ -1,2 +1,2 @@
 # Matrix_Multiplication
-Using pthread to perform matrix multiplication
+Using pthread and different methods to perform matrix multiplication
